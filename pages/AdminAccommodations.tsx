@@ -89,33 +89,33 @@ export const AdminAccommodations: React.FC<AdminAccommodationsProps> = ({ rooms,
         </div>
         
         {/* Search Bar */}
-        <div className="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-gray-200 items-center">
-             <div className="flex items-center gap-2 px-2 border-r border-gray-100">
+        <div className="w-full md:w-auto flex flex-col md:flex-row gap-2 bg-white p-2 rounded-xl shadow-sm border border-gray-200 items-start md:items-center">
+             <div className="w-full md:w-auto flex items-center gap-2 px-2 border-b md:border-b-0 md:border-r border-gray-100 pb-2 md:pb-0">
                 <Calendar size={16} className="text-gray-400"/>
                 <input 
                     type="date" 
-                    className="text-sm outline-none bg-transparent"
+                    className="flex-1 md:w-auto text-sm outline-none bg-transparent"
                     value={searchDate}
                     onChange={e => setSearchDate(e.target.value)}
                 />
              </div>
-             <div className="flex items-center gap-2 px-2 border-r border-gray-100">
+             <div className="w-full md:w-auto flex items-center gap-2 px-2 border-b md:border-b-0 md:border-r border-gray-100 pb-2 md:pb-0">
                 <Users size={16} className="text-gray-400"/>
                 <input 
                     type="number" 
                     min="1" 
                     placeholder="Hóspedes" 
-                    className="w-20 text-sm outline-none bg-transparent"
+                    className="w-full md:w-20 text-sm outline-none bg-transparent"
                     value={searchGuests || ''}
                     onChange={e => setSearchGuests(parseInt(e.target.value))}
                 />
              </div>
-             <div className="flex gap-2 pl-2">
-                <button onClick={() => setFilter('ALL')} className={`px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === 'ALL' ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Todos</button>
-                <button onClick={() => setFilter(RoomStatus.AVAILABLE)} className={`px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.AVAILABLE ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Livres</button>
-                <button onClick={() => setFilter(RoomStatus.OCCUPIED)} className={`px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.OCCUPIED ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Ocupados</button>
-                <button onClick={() => setFilter(RoomStatus.CLEANING)} className={`px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.CLEANING ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Limpeza</button>
-                <button onClick={() => setFilter(RoomStatus.MAINTENANCE)} className={`px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.MAINTENANCE ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Manutenção</button>
+             <div className="w-full md:w-auto flex flex-wrap gap-2 pl-2">
+                <button onClick={() => setFilter('ALL')} className={`flex-1 md:flex-none px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === 'ALL' ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Todos</button>
+                <button onClick={() => setFilter(RoomStatus.AVAILABLE)} className={`flex-1 md:flex-none px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.AVAILABLE ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Livres</button>
+                <button onClick={() => setFilter(RoomStatus.OCCUPIED)} className={`flex-1 md:flex-none px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.OCCUPIED ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Ocupados</button>
+                <button onClick={() => setFilter(RoomStatus.CLEANING)} className={`flex-1 md:flex-none px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.CLEANING ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Limpeza</button>
+                <button onClick={() => setFilter(RoomStatus.MAINTENANCE)} className={`flex-1 md:flex-none px-3 py-1.5 text-xs rounded-md font-bold transition ${filter === RoomStatus.MAINTENANCE ? 'bg-olive-600 text-white shadow' : 'hover:bg-gray-100 text-gray-500'}`}>Manut.</button>
              </div>
         </div>
       </div>
@@ -236,11 +236,42 @@ export const AdminAccommodations: React.FC<AdminAccommodationsProps> = ({ rooms,
                                   <textarea className="w-full border p-3 rounded-xl h-24 text-sm" value={editForm.description || ''} onChange={e => setEditForm({...editForm, description: e.target.value})} placeholder="Vista para o mar, banheira, etc..." ></textarea>
                               </div>
 
-                              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2">URL da Imagem (Principal)</label>
+                               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Imagem (URL ou Upload)</label>
                                    <div className="flex gap-2">
-                                       <input type="text" value={editForm.images?.[0] || ''} onChange={e => setEditForm({...editForm, images: [e.target.value]})} className="flex-1 border p-3 rounded-xl text-sm" placeholder="https://..." />
-                                       <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                                       <div className="flex-1 flex flex-col gap-2">
+                                            <input 
+                                                type="text" 
+                                                value={editForm.images?.[0] || ''} 
+                                                onChange={e => setEditForm({...editForm, images: [e.target.value]})} 
+                                                className="w-full border p-3 rounded-xl text-sm" 
+                                                placeholder="https://..." 
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <label className="cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-600 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition flex items-center gap-2">
+                                                    <span className="md:hidden">Upload</span>
+                                                    <span className="hidden md:inline">Carregar Foto</span>
+                                                    <input 
+                                                        type="file" 
+                                                        className="hidden" 
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => {
+                                                                    const base64 = reader.result as string;
+                                                                    setEditForm({...editForm, images: [base64]});
+                                                                };
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        }}
+                                                    />
+                                                </label>
+                                                <span className="text-[10px] text-gray-400">Máx 2MB (Base64)</span>
+                                            </div>
+                                       </div>
+                                       <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shrink-0">
                                            {editForm.images?.[0] && <img src={editForm.images[0]} className="w-full h-full object-cover" />}
                                        </div>
                                    </div>

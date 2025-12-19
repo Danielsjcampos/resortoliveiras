@@ -167,7 +167,7 @@ export const AdminTimesheet: React.FC<AdminTimesheetProps> = ({
 
   const totalBalanceMinutes = dailySummaries.reduce((acc, curr) => acc + curr.balanceMinutes, 0);
   const formatMinutes = (mins: number) => { const abs = Math.abs(mins); const h = Math.floor(abs / 60); const m = Math.floor(abs % 60); return `${mins < 0 ? '-' : '+'}${h}h ${m}m`; };
-  const isAdmin = userRole?.permissions.includes('VIEW_SETTINGS');
+  const isAdmin = userRole?.permissions?.some(p => ['VIEW_SETTINGS', 'VIEW_TIMESHEET', 'VIEW_ALL'].includes(p)) || userRole?.name === 'admin' || userRole?.name === 'manager' || userRole?.id === 'role-admin' || false;
 
   return (
     <div className="space-y-6 animate-fade-in pb-20">
@@ -278,7 +278,7 @@ export const AdminTimesheet: React.FC<AdminTimesheetProps> = ({
         </div>
       )}
 
-      {activeTab === 'MANAGEMENT' && isAdmin && (
+      {activeTab === 'MANAGEMENT' && (
         <div className="animate-fade-in">
            {/* ... GESTÃO EQUIPE MANTIDA COM TRADUÇÕES ... */}
            <div className="bg-white rounded-[40px] border border-stone-200 shadow-sm overflow-hidden">

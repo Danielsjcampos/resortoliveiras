@@ -509,7 +509,8 @@ export const AdminReservations: React.FC<AdminReservationsProps> = ({
         </button>
       </div>
 
-      <div className="bg-white rounded-[32px] shadow-sm border border-stone-200 overflow-hidden print:hidden">
+      {/* DESKTOP TABLE VIEW */}
+      <div className="hidden lg:block bg-white rounded-[32px] shadow-sm border border-stone-200 overflow-hidden print:hidden">
         <table className="w-full text-left">
           <thead className="bg-stone-50 text-[10px] uppercase text-stone-400 font-black tracking-widest">
             <tr>
@@ -594,6 +595,89 @@ export const AdminReservations: React.FC<AdminReservationsProps> = ({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* MOBILE LIST VIEW */}
+      <div className="lg:hidden space-y-4 print:hidden">
+        {reservations.map(res => {
+          const grandTotal = calculateRoomTotal(res) + calculateConsumptionTotal(res);
+          const guestsCount = (res.guestsDetails?.adults || 0) + (res.guestsDetails?.children || 0) || 1;
+          const roomName = rooms.find(r => r.id === res.roomId)?.name;
+
+          return (
+            <div key={res.id} className="bg-white p-5 rounded-2xl shadow-sm border border-stone-100 flex flex-col gap-4">
+               <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-lg text-stone-800 leading-tight">{res.guestName}</h3>
+                    <p className="text-xs text-stone-500 font-medium mt-1">{roomName} • {guestsCount} Pess.</p>
+                     {res.status === 'Check-in' && res.accessCode && (
+                        <div className="text-[10px] text-olive-600 flex items-center gap-1 mt-2 font-mono bg-olive-50 w-fit px-2 py-1 rounded-lg">
+                            <span className="font-bold">CODE:</span> {res.accessCode}
+                        </div>
+                    )}
+                  </div>
+                  <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide ${res.status === 'Check-in' ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-400'}`}>{res.status}</span>
+               </div>
+
+               <div className="flex justify-between items-center bg-stone-50 p-3 rounded-xl">
+                  <div className="text-xs text-stone-400 font-bold uppercase">Total Estimado</div>
+                  <div className="text-xl font-black text-stone-800">R$ {grandTotal.toLocaleString('pt-BR')}</div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-2 text-xs text-stone-500 font-bold border-t border-stone-100 pt-3">
+                   <div>
+                       <span className="block text-[10px] text-stone-300 uppercase">Check-in</span>
+                       {new Date(res.checkIn).toLocaleDateString('pt-BR')}
+                   </div>
+                   <div className="text-right">
+                       <span className="block text-[10px] text-stone-300 uppercase">Check-out</span>
+                       {new Date(res.checkOut).toLocaleDateString('pt-BR')}
+                   </div>
+               </div>
+
+               {/* Mobile Actions */}
+               <div className="grid grid-cols-2 gap-2 pt-2">
+                  {res.status === 'Confirmado' && (
+                    <button onClick={() => handleCheckIn(res)} className="col-span-2 py-3 bg-olive-600 text-white text-xs font-bold rounded-xl hover:bg-olive-700 transition flex items-center justify-center gap-2 shadow-lg shadow-olive-200">
+                        CHECK-IN
+                    </button>
+                  )}
+
+                  {res.status === 'Pendente' && (
+                    <button onClick={() => {
+                        if(window.confirm('Confirmar esta reserva e bloquear a data?')) {
+                            onUpdateStatus(res.id, 'Confirmado');
+                        }
+                    }} className="col-span-2 py-3 bg-green-600 text-white text-xs font-bold rounded-xl hover:bg-green-700 transition flex items-center justify-center gap-2 shadow-lg shadow-green-200">
+                        <CheckCircle size={14}/> ACEITAR RESERVA
+                    </button>
+                  )}
+
+                  {res.status === 'Check-in' && (
+                    <>
+                       <button onClick={() => { setSelectedResForConsumption(res); setShowConsumptionModal(true); }} className="py-3 bg-stone-100 text-stone-600 text-xs font-bold rounded-xl hover:bg-stone-200 transition flex items-center justify-center gap-2">
+                            <ShoppingBag size={14}/> COMANDA
+                       </button>
+                       <button onClick={() => { setSelectedResForCheckout(res); setCheckoutStep('REVIEW'); }} className="py-3 bg-red-50 text-red-600 text-xs font-black rounded-xl hover:bg-red-100 transition flex items-center justify-center gap-2">
+                            CHECK-OUT
+                       </button>
+                    </>
+                  )}
+
+                  {res.status === 'Check-out' && (
+                     <button onClick={() => { setSelectedResForCheckout(res); setCheckoutStep('RECEIPT'); }} className="col-span-2 py-3 bg-stone-100 text-stone-600 rounded-xl hover:bg-stone-200 text-xs font-bold flex items-center justify-center gap-2">
+                        <Receipt size={14} /> Recibo Fiscal
+                     </button>
+                  )}
+                  
+                  <div className="col-span-2 flex gap-2">
+                    <button onClick={() => setEditingRes(res)} className="flex-1 py-2 border border-stone-200 text-stone-400 hover:text-olive-600 rounded-xl transition flex items-center justify-center gap-2 text-xs font-bold"><Edit size={14}/> Editar</button>
+                    <button onClick={() => handleDeleteClick(res.id)} className="flex-1 py-2 border border-stone-200 text-stone-400 hover:text-red-500 rounded-xl transition flex items-center justify-center gap-2 text-xs font-bold"><Trash2 size={14}/> Excluir</button>
+                  </div>
+               </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* MODAL COMANDA (LEITURA) */}

@@ -279,6 +279,7 @@ const App: React.FC = () => {
       if (rmData) {
           const mappedRooms = rmData.map((r: any) => ({
               ...r,
+              images: r.images || (r.image ? [r.image] : []),
               bedConfig: r.bed_config,
               currentGuestName: r.current_guest_name,
               features: r.features
@@ -880,14 +881,26 @@ const App: React.FC = () => {
                     }}
                 /></AdminLayout>} />
                 <Route path="/admin/accommodations" element={<AdminLayout {...sharedLayoutProps}><AdminAccommodations rooms={rooms} reservations={reservations} onUpdateStatus={handleUpdateRoomStatus} onUpdateRoom={async (updatedRoom) => {
-                    // Fix: Map camelCase bedConfig to snake_case bed_config for Supabase
-                    const { bedConfig, ...rest } = updatedRoom;
                     const dbPayload = {
-                        ...rest,
-                        bed_config: bedConfig
+                        name: updatedRoom.name,
+                        type: updatedRoom.type,
+                        capacity: updatedRoom.capacity,
+                        price: updatedRoom.price,
+                        status: updatedRoom.status,
+                        description: updatedRoom.description,
+                        bed_config: updatedRoom.bedConfig, // Map camel to snake
+                        images: updatedRoom.images, // Send as array directly to 'images' column
+                        features: updatedRoom.features
                     };
-                    await supabase.from('rooms').update(dbPayload).eq('id', updatedRoom.id);
-                    setRooms(prev => prev.map(r => r.id === updatedRoom.id ? updatedRoom : r));
+
+                    const { error } = await supabase.from('rooms').update(dbPayload).eq('id', updatedRoom.id);
+                    
+                    if (error) {
+                        console.error("Error updating room:", error);
+                        alert("Erro ao salvar acomodação: " + error.message);
+                    } else {
+                        setRooms(prev => prev.map(r => r.id === updatedRoom.id ? updatedRoom : r));
+                    }
                 }} /></AdminLayout>} />
                 <Route path="/admin/content" element={<AdminLayout {...sharedLayoutProps}><AdminContent posts={posts} settings={settings} onUpdateSettings={handleUpdateSettings} onAddPost={handleAddPost} onDeletePost={handleDeletePost} /></AdminLayout>} />
                 <Route path="/admin/settings" element={<AdminLayout {...sharedLayoutProps}><AdminSettings settings={settings} onUpdateSettings={handleUpdateSettings} users={users} roles={roles} onDeleteUser={handleDeleteUser} onAddUser={handleAddUser} onUpdateUser={handleUpdateUser} onAddRole={handleAddRole} onUpdateRole={handleUpdateRole} onDeleteRole={handleDeleteRole} /></AdminLayout>} />
