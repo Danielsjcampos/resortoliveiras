@@ -34,9 +34,11 @@ export const PublicReservations: React.FC<PublicReservationsProps> = ({ rooms, r
            const resStart = new Date(res.checkIn);
            const resEnd = new Date(res.checkOut);
            
-           // Buffer: Add 1 hour to legacy resEnd for cleaning (matching Admin logic)
-           // Simplified overlap logic:
-           return (checkInDate < resEnd && checkOutDate > resStart);
+           // Precise Overlap Logic (No Cleaning Buffer for Public View to allow tight scheduling)
+           // Overlap exists if: (StartA < EndB) AND (EndA > StartB)
+           // This allows abutting: EndA == StartB is NOT an overlap.
+           // Example: Res A (12:00-14:00), New B (14:00-16:00) -> 14:00 < 14:00 is False (No conflict)
+           return (checkInDate.getTime() < resEnd.getTime() && checkOutDate.getTime() > resStart.getTime());
        });
 
        return !isOccupied;

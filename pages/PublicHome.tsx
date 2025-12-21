@@ -7,6 +7,7 @@ import {
   ChefHat, Play, MessageSquare, Snowflake, Bath, Home as HomeIcon,
   Instagram, Facebook, Linkedin, Mail, Phone, Music, Shield, Palmtree, Ticket, X, CheckCircle
 } from 'lucide-react';
+import ScrollExpandMedia from '../components/ui/scroll-expansion-hero';
 
 interface PublicHomeProps {
   onAddLead: (leadData: Partial<Lead>) => void;
@@ -60,7 +61,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ onAddLead, onBuyTicket, 
   const visibleEvents = publicEvents.filter(e => e.showOnSite);
 
   return (
-    <div className="flex flex-col bg-white overflow-hidden scroll-smooth font-sans text-stone-900">
+    <div className="flex flex-col bg-white overflow-x-hidden scroll-smooth font-sans text-stone-900">
       
       {/* 1. HERO SECTION */}
       <section id="home" className="relative h-screen min-h-[700px] flex items-center justify-center text-white overflow-hidden">
@@ -162,32 +163,30 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ onAddLead, onBuyTicket, 
       </section>
 
       {/* 3.5. VIDEO PROMO */}
-      <section id="tour-virtual" className="py-24 bg-stone-900 text-white text-center">
-          <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto space-y-8">
-                  <div className="space-y-4">
-                     <h2 className="text-3xl md:text-5xl font-bold text-olive-400">Sinta a Experiência</h2>
-                     <p className="text-stone-300 text-lg leading-relaxed">
-                        Dê o play e mergulhe na atmosfera única do Resort das Oliveiras. 
-                        Um refúgio de paz, luxo e natureza esperando por você.
-                     </p>
-                  </div>
-                  
-                  <div className="relative w-full pt-[56.25%] rounded-2xl overflow-hidden shadow-2xl border-4 border-olive-500/30 group">
-                      <iframe 
-                        className="absolute top-0 left-0 w-full h-full"
-                        src="https://www.youtube.com/embed/VJsnq6m6Utc?autoplay=0&rel=0&modestbranding=1" 
-                        title="Resort das Oliveiras Tour"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowFullScreen
-                      ></iframe>
-                  </div>
-              </div>
-          </div>
+      {/* 3.5. VIDEO PROMO - SCROLL EXPAND HERO */}
+      <section id="tour-virtual" className="bg-stone-900 border-y border-stone-800 relative z-20">
+         <ScrollExpandMedia 
+            mediaType="video"
+            mediaSrc="https://www.youtube.com/watch?v=VJsnq6m6Utc"
+            bgImageSrc="https://resortdasoliveiras1.com.br/lovable-uploads/d2d2ab3e-fe12-4410-aed3-35383679b6de.png"
+            title="Sinta a Experiência"
+            date="Resort das Oliveiras"
+            scrollToExpand="Role para Mergulhar"
+            textBlend={true}
+         >
+             <div className="max-w-3xl mx-auto text-center bg-black/60 p-8 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl">
+                <p className="text-xl md:text-2xl text-stone-100 leading-relaxed font-light mb-8">
+                   "Um refúgio de paz, luxo e natureza esperando por você."
+                </p>
+                <a href="#/reservas" className="inline-flex items-center gap-2 bg-olive-600 hover:bg-olive-500 text-white font-bold py-4 px-10 rounded-full transition-all shadow-lg hover:shadow-olive-600/50 hover:-translate-y-1">
+                   <Calendar size={20} /> Viver essa Experiência
+                </a>
+             </div>
+         </ScrollExpandMedia>
       </section>
 
       {/* 4. GALERIA DESTAQUE (BANGALÔ) */}
-      <section id="acomodacoes" className="py-24 bg-stone-900 text-white relative overflow-hidden">
+      <section id="acomodacoes" className="py-24 bg-stone-900 text-white relative overflow-hidden z-30">
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
           <div className="container mx-auto px-4 relative z-10">
               <div className="flex flex-col lg:flex-row gap-16 items-center">
@@ -216,7 +215,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ onAddLead, onBuyTicket, 
                   </div>
                   
                   <div className="lg:w-1/2">
-                       <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-stone-800 group">
+                       <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-stone-800 group max-w-[50%] mx-auto">
                            <img src="https://resortdasoliveiras1.com.br/lovable-uploads/e7775349-711a-42f4-9718-cf1df4b660f8.png" alt="Bangalô" className="w-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
                            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent">
                                <p className="text-xl font-bold">Configuração Casal ou Família</p>

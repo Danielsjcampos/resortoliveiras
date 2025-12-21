@@ -212,21 +212,104 @@ const App: React.FC = () => {
   // --- AUTH & FETCH ---
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: userData } = await supabase.from('users').select('*').eq('id', session.user.id).single();
-          if (userData) setAuthenticatedUser(userData as User);
+    // Initial Session Check
+    const initAuth = async () => {
+        console.log("App: initAuth started");
+        try {
+            console.log("App: calling getSession");
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            console.log("App: session retrieved", session, sessionError);
+            
+            // CRITICAL: Fetch Roles and Settings immediately to avoid UI flicker/empty menus
+            const [ { data: rolesData }, { data: settingsData } ] = await Promise.all([
+                supabase.from('roles').select('*'),
+                supabase.from('settings').select('*').single()
+            ]);
+            
+            if (rolesData) setRoles(rolesData);
+            if (settingsData) {
+                 const mappedSettings: SystemSettings = {
+                    ...settingsData,
+                    resortName: settingsData.resort_name,
+                    resortCnpj: settingsData.resort_cnpj,
+                    resortAddress: settingsData.address,
+                    logoUrl: settingsData.logo_url,
+                    primaryColor: settingsData.primary_color,
+                    contactEmail: settingsData.contact_email,
+                    contactPhone: settingsData.contact_phone,
+                    instagramUrl: settingsData.instagram_url,
+                    facebookUrl: settingsData.facebook_url,
+                    linkedinUrl: settingsData.linkedin_url,
+                    youtubeUrl: settingsData.youtube_url,
+                    webhookUrl: settingsData.webhook_url,
+                    outboundWebhookUrl: settingsData.outbound_webhook_url,
+                    apiKey: settingsData.api_key,
+                    menuStyle: settingsData.menu_style,
+                    menuBackgroundColor: settingsData.menu_background_color,
+                    menuIconSize: settingsData.menu_icon_size,
+                    menuFontSize: settingsData.menu_font_size,
+                    menuItemSpacing: settingsData.menu_item_spacing,
+                    menuButtonPadding: settingsData.menu_button_padding,
+                    menuBorderRadius: settingsData.menu_border_radius,
+                    menuColumns: settingsData.menu_columns,
+                    workplaceLat: settingsData.workplace_lat,
+                    workplaceLng: settingsData.workplace_lng,
+                    workplaceRadius: settingsData.workplace_radius,
+                    aiKeywordsQueue: settingsData.ai_keywords_queue,
+                    isAutoPilotActive: settingsData.is_auto_pilot_active
+                };
+                setSettings(mappedSettings);
+            }
+
+            if (session?.user) {
+                console.log("App: fetching user profile");
+                const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+                console.log("App: user profile retrieved", userData, userError);
+                
+                if (userData) {
+                    setAuthenticatedUser(userData as User);
+                }
+            }
+        } catch (e) {
+            console.warn("Session check failed", e);
+        } finally {
+            console.log("App: initAuth finally block");
+            setLoading(false);
         }
-      } catch (e) {
-        console.warn("Erro ao verificar sessão.");
-      } finally {
-        setLoading(false);
-      }
     };
 
-    checkAuth();
+    // Safety timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+        setLoading(loading => {
+            if (loading) {
+                console.warn("App: Force loading false due to timeout");
+                return false;
+            }
+            return loading;
+        });
+    }, 8000);
+
+    initAuth();
+
+    return () => clearTimeout(timeoutId);
+
+    // Real-time Auth Listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (session?.user) {
+                 const { data: userData } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+                 if (userData) {
+                     setAuthenticatedUser(userData as User);
+                 }
+            }
+        } else if (event === 'SIGNED_OUT') {
+            setAuthenticatedUser(null);
+        }
+    });
+
+    return () => {
+        subscription.unsubscribe();
+    };
   }, []);
 
 
@@ -342,7 +425,19 @@ const App: React.FC = () => {
           setVenues(mappedVenues);
       }
       if (pData?.length) setPosts(pData);
-      if (tData?.length) setTransactions(tData);
+      if (tData?.length) {
+          const mappedTransactions = tData.map((t: any) => ({
+              id: t.id,
+              description: t.description,
+              amount: t.amount,
+              type: t.type,
+              category: t.category,
+              date: t.date || t.created_at, // Fallback for date
+              status: t.status,
+              referenceId: t.reference_id
+          }));
+          setTransactions(mappedTransactions);
+      }
       if (prData?.length) {
           const mappedProducts = prData.map((p: any) => ({
               ...p,
@@ -398,7 +493,29 @@ const App: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const userRole = roles.find(r => r.id === authenticatedUser?.roleId);
+  // DERIVE USER ROLE with Fallback for Super Admin
+  const userRole = React.useMemo(() => {
+    if (!authenticatedUser) return undefined;
+    
+    const foundRole = roles.find(r => r.id === authenticatedUser.roleId);
+    
+    // Fallback: If user is admin (email or specific ID) but role not found yet (race condition), grant admin rights temporarily
+    if (!foundRole && (authenticatedUser.email === 'admin@elance.com' || authenticatedUser.roleId === 'role-admin')) {
+        return {
+            id: 'role-admin',
+            name: 'admin',
+            description: 'Super Admin (Fallback)',
+            permissions: [
+                'VIEW_DASHBOARD', 'VIEW_KITCHEN', 'VIEW_POS', 'VIEW_RESERVATIONS', 
+                'VIEW_EVENTS', 'VIEW_VENUES', 'VIEW_PRODUCTS', 'VIEW_FINANCE', 
+                'VIEW_CRM', 'VIEW_ACCOMMODATIONS', 'VIEW_CONTENT', 'VIEW_SETTINGS', 
+                'VIEW_TIMESHEET'
+            ]
+        } as Role;
+    }
+    
+    return foundRole;
+  }, [roles, authenticatedUser]);
 
     // --- NEW HANDLERS ---
 
@@ -726,6 +843,29 @@ const App: React.FC = () => {
     );
   }
 
+  const handleAddTransaction = async (transaction: Transaction) => {
+      const dbPayload = {
+          id: transaction.id,
+          date: transaction.date,
+          description: transaction.description,
+          amount: transaction.amount,
+          type: transaction.type,
+          category: transaction.category,
+          status: transaction.status,
+          payment_method: (transaction as any).paymentMethod,
+          created_by: authenticatedUser?.email || 'system'
+      };
+      
+      const { error } = await supabase.from('transactions').insert([dbPayload]);
+      
+      if (!error) {
+          setTransactions(prev => [transaction, ...prev]);
+      } else {
+          console.error("Error adding transaction:", error);
+          alert("Erro ao registrar transação no sistema.");
+      }
+  };
+
   return (
     <Router>
       <Routes>
@@ -833,7 +973,7 @@ const App: React.FC = () => {
                         setReservations(prev => prev.filter(r => r.id !== id));
                     }}
                 /></AdminLayout>} />
-                <Route path="/admin/events" element={<AdminLayout {...sharedLayoutProps}><AdminEvents events={events} venues={venues} onUpdateEventStatus={handleUpdateEventStatus} onUpdateEvent={handleUpdateEvent} onAddEvent={handleAddEvent} /></AdminLayout>} />
+                <Route path="/admin/events" element={<AdminLayout {...sharedLayoutProps}><AdminEvents events={events} venues={venues} settings={settings} onUpdateEventStatus={handleUpdateEventStatus} onUpdateEvent={handleUpdateEvent} onAddEvent={handleAddEvent} onAddTransaction={handleAddTransaction} /></AdminLayout>} />
                 <Route path="/admin/venues" element={<AdminLayout {...sharedLayoutProps}><AdminVenues venues={venues} onAddVenue={handleAddVenue} onDeleteVenue={handleDeleteVenue} /></AdminLayout>} />
                 <Route path="/admin/products" element={<AdminLayout {...sharedLayoutProps}><AdminProducts products={products} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} onUpdateProduct={async (id, updates) => {
                     const dbPayload = {

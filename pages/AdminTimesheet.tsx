@@ -301,7 +301,7 @@ export const AdminTimesheet: React.FC<AdminTimesheetProps> = ({
                                         <img src={u.avatar} className="w-12 h-12 rounded-2xl shadow-sm" />
                                         <div>
                                             <p className="font-black text-stone-900 text-base">{u.name}</p>
-                                            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">{u.roleId.replace('role-','')}</p>
+                                            <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest">{(u.roleId || '').replace('role-','')}</p>
                                         </div>
                                     </td>
                                     <td className="p-6">

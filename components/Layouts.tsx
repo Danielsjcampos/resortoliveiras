@@ -193,7 +193,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, settings, cu
   const userNotifications = notifications.filter(n => !n.roleId || n.roleId === currentUser?.roleId);
   const unreadCount = userNotifications.filter(n => !n.read).length;
 
-  const hasPermission = (perm: Permission) => userRole?.permissions.includes(perm) || false;
+  const hasPermission = (perm: Permission) => {
+      // MASTER ADMIN BYPASS: Ensures buttons never disappear for the owner
+      if (currentUser?.email === 'admin@elance.com' || userRole?.name === 'admin' || userRole?.id === 'role-admin') {
+          return true;
+      }
+      return userRole?.permissions.includes(perm) || false;
+  };
 
   const handleUpdateLocalUser = (updated: User) => {
       // If parent provides a callback, use it to update global state

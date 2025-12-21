@@ -144,6 +144,8 @@ export interface EventParticipant {
   ticketPurchased: boolean;
   purchaseDate?: string;
   checkedInAt?: string;
+  isExtra?: boolean; // Se foi adicionado na hora (excedente)
+  checkedIn?: boolean; // Flag simples de presença
 }
 
 export interface EventRequest {
@@ -161,6 +163,15 @@ export interface EventRequest {
   description?: string;
   image?: string; // Legacy main image
 
+  // Proposal & Financials
+  proposalStatus?: 'Rascunho' | 'Enviada' | 'Aprovada' | 'Rejeitada';
+  paymentStatus?: 'Pendente' | 'Parcial' | 'Quitado';
+  depositAmount?: number; // Valor do Sinal
+  extraGuestCost?: number; // Custo por pessoa extra
+  
+  // Media
+  images?: string[]; // Array de URLs para galeria do evento
+  
   // Advanced Fields
   startDate?: string;
   endDate?: string;
@@ -171,7 +182,6 @@ export interface EventRequest {
   cateringOptions?: string[];
   maxCapacity?: number;
   totalCost?: number;
-  depositAmount?: number;
   paymentTerms?: string;
   isPublicTicket?: boolean;
   ticketPrice?: number;
@@ -210,6 +220,8 @@ export interface Transaction {
   date: string;
   status: 'PAID' | 'PENDING';
   referenceId?: string;
+  paymentMethod?: string;
+  createdBy?: string;
 }
 
 export type Permission = 
